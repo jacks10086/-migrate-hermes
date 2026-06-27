@@ -1,0 +1,187 @@
+========================================
+  Hermes 迁移工具 - 使用步骤
+========================================
+
+【准备工作】
+
+1. 关闭 Hermes 应用（包括系统托盘）
+2. 确保没有任何 Python 或 Node.js 程序在运行
+3. 确定迁移目标路径（默认：D:\software\HermesDesktop）
+
+========================================
+
+【执行步骤】
+
+第一步：以管理员身份打开 PowerShell
+
+  方法：
+  - 按 Win + X
+  - 选择 "Windows PowerShell (管理员)"
+  - 或选择 "终端 (管理员)"
+
+
+第二步：进入脚本目录
+
+  复制粘贴这条命令：
+
+  cd "脚本目录"
+
+
+第三步：执行迁移脚本
+
+  复制粘贴这条命令：
+
+  .\migrate-hermes.ps1
+
+
+第四步：输入目标路径
+
+  脚本会提示：
+  Enter target path (or press Enter for default):
+  Default: D:\software\HermesDesktop
+  Your input: _
+
+  操作：
+  - 直接回车：使用默认路径 D:\software\HermesDesktop
+  - 输入路径：使用自定义路径（如 D:\MyData\Hermes）
+
+
+第五步：确认迁移
+
+  看到 "Continue? (Y/N)" 时，输入 Y 回车
+
+
+第六步：等待完成
+
+  脚本会自动执行 8 个步骤：
+  Step 1: Cleaning old directory...   （清理旧目录）
+  Step 2: Closing processes...        （关闭进程）
+  Step 3: Waiting...                  （等待）
+  Step 4: Creating directory...       （创建目录）
+  Step 5: Moving data...              （移动数据，需要几分钟）
+  Step 6: Cleaning source...          （清理源目录）
+  Step 7: Creating junction...        （创建链接）
+  Step 8: Verifying...                （验证）
+
+
+第七步：等待完成
+
+  看到 "Migration Complete!" 表示成功
+  过程需要 5-10 分钟，请耐心等待
+
+========================================
+
+【验证是否成功】
+
+执行这条命令：
+
+  .\verify-hermes.ps1
+
+注意：如果使用自定义路径，回滚时需要输入相同路径
+
+如果看到：
+  Status: OK
+  Type: Junction
+
+说明迁移成功
+
+========================================
+
+【如果需要回滚】
+
+执行这条命令：
+
+  .\rollback-hermes.ps1
+
+  脚本会提示输入源路径：
+  - 直接回车：使用默认路径 D:\software\HermesDesktop
+  - 输入路径：输入迁移时使用的自定义路径
+
+数据会移回系统盘
+
+========================================
+
+【如果脚本执行失败】
+
+使用这些命令（逐条复制执行，替换路径为你的目标路径）：
+
+1. 关闭进程：
+   Get-Process node, python, hermes, uv -ErrorAction SilentlyContinue | Stop-Process -Force
+
+2. 等待：
+   Start-Sleep 3
+
+3. 创建目录（替换为你的路径）：
+   New-Item -Path "D:\你的路径" -ItemType Directory -Force
+
+4. 移动数据（需要几分钟，替换为你的路径）：
+   robocopy "$env:LOCALAPPDATA\hermes" "D:\你的路径\hermes" /E /MOVE /R:3 /W:5
+
+5. 删除空源目录（robocopy 会留下空目录）：
+   Remove-Item "$env:LOCALAPPDATA\hermes" -Force -Recurse
+
+6. 创建链接（替换为你的路径）：
+   New-Item -Path "$env:LOCALAPPDATA\hermes" -ItemType Junction -Value "D:\你的路径\hermes" -Force
+
+7. 验证：
+   Get-Item "$env:LOCALAPPDATA\hermes"
+
+========================================
+
+【迁移后检查】
+
+1. 启动 Hermes，检查功能是否正常
+2. 检查对话历史、技能是否都在
+3. 测试 Python 任务，看是否还被拦截
+
+========================================
+
+【常见问题】
+
+问题：提示"无法运行脚本"
+解决：执行这个命令允许脚本：
+      Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
+问题：提示"进程无法关闭"
+解决：打开任务管理器，手动结束 node.exe 和 hermes.exe
+
+问题：提示"目标路径已存在"
+解决：删除 D:\software\HermesDesktop 文件夹后重试
+
+问题：迁移后 Hermes 无法启动
+解决：执行回滚脚本 .\rollback-hermes.ps1
+
+========================================
+
+【预期效果】
+
+迁移前：
+- 系统盘空间：-3.3 GB
+- 杀毒拦截：频繁
+
+迁移后：
+- 系统盘空间：+3.3 GB 释放 ✓
+- 杀毒拦截：可能减少 ✓
+- 数据安全：100% 保留 ✓
+
+========================================
+
+【文件说明】
+
+migrate-hermes.ps1   - 迁移脚本（支持自定义路径）
+rollback-hermes.ps1  - 回滚脚本（支持自定义路径）
+verify-hermes.ps1    - 验证脚本
+使用步骤.txt         - 本文件（中文说明）
+
+========================================
+
+【时间预计】
+
+总共：5-10 分钟
+
+========================================
+
+如有问题，查看桌面上的日志文件：
+hermes-migration-log.txt
+
+========================================
